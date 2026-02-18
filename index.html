@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategic Acquisition Analysis Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
+        .dashboard { display: flex; justify-content: space-between; flex-wrap: wrap; }
+        .card { background: white; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); border-radius: 5px; padding: 20px; margin: 10px; flex: 1 1 calc(30% - 40px); }
+        .filters { margin-bottom: 20px; }
+        .filter { margin-right: 10px; }
+        .funnel { display: flex; justify-content: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Strategic Acquisition Analysis Dashboard</h1>
+    <div class="filters">
+        <select class="filter" onchange="filterByChannel(this.value)">
+            <option value="all">All Channels</option>
+            <option value="email">Email</option>
+            <option value="social">Social Media</option>
+            <option value="seo">SEO</option>
+        </select>
+    </div>
+    <div class="dashboard">
+        <div class="card"><h2>KPI 1</h2><p>Value: <span id="kpi1">100</span></p></div>
+        <div class="card"><h2>KPI 2</h2><p>Value: <span id="kpi2">200</span></p></div>
+        <div class="card"><h2>KPI 3</h2><p>Value: <span id="kpi3">300</span></p></div>
+    </div>
+    <div class="funnel">
+        <canvas id="funnelChart" width="400" height="400"></canvas>
+    </div>
+    <script>
+        function filterByChannel(channel) {
+            // Placeholder for filter logic.
+            console.log('Filtering by channel:', channel);
+        }
+
+        // Sample funnel chart using Chart.js (ensure Chart.js is included in your project)
+        const ctx = document.getElementById('funnelChart').getContext('2d');
+        const funnelChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Awareness', 'Interest', 'Decision', 'Action'],
+                datasets: [{
+                    label: 'Funnel',
+                    data: [300, 250, 150, 50],
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                }],
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
