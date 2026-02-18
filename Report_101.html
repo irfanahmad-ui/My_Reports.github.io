@@ -3,40 +3,497 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/react/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lucide-react/dist/lucide-react.umd.js"></script>
+    <title>Strategic Acquisition Analysis Dashboard</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/recharts@2.10.0/dist/Recharts.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes blob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        .animate-blob {
+            animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+    </style>
 </head>
-<body>
-    <div id="dashboard"></div>
+<body class="bg-slate-50 font-sans text-slate-800">
+    <div id="root"></div>
 
-    <script>
-        const { PieChart, Pie, Cell, ResponsiveContainer } = Recharts;
+    <script type="module">
+        const React = window.React;
+        const ReactDOM = window.ReactDOM;
+        const { useState, useMemo } = React;
+        const { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, Tooltip, ComposedChart, Line } = window.Recharts;
 
-        const data = [
-            { name: 'Group A', value: 400 },
-            { name: 'Group B', value: 300 },
-            { name: 'Group C', value: 300 },
-            { name: 'Group D', value: 200 },
+        // --- Data Constants ---
+        const CHANNELS = {
+            GOOGLE: 'Google Ads',
+            LINKEDIN: 'LinkedIn Ads',
+            MICROSOFT: 'Microsoft Ads'
+        };
+
+        const CHANNEL_CONFIG = {
+            [CHANNELS.GOOGLE]: { color: '#2563EB', key: 'google', light: '#EFF6FF' },
+            [CHANNELS.LINKEDIN]: { color: '#7C3AED', key: 'linkedin', light: '#F5F3FF' },
+            [CHANNELS.MICROSOFT]: { color: '#0D9488', key: 'microsoft', light: '#F0FDFA' }
+        };
+
+        const PIPELINE_DATA = [
+            { name: CHANNELS.GOOGLE, value: 4880000, color: CHANNEL_CONFIG[CHANNELS.GOOGLE].color },
+            { name: CHANNELS.MICROSOFT, value: 1550000, color: CHANNEL_CONFIG[CHANNELS.MICROSOFT].color },
+            { name: CHANNELS.LINKEDIN, value: 510000, color: CHANNEL_CONFIG[CHANNELS.LINKEDIN].color },
         ];
 
-        const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+        const MONTHLY_LEAD_DATA = [
+            { month: 'Jan', google: 123, linkedin: 23, microsoft: 5 },
+            { month: 'Feb', google: 131, linkedin: 25, microsoft: 10 },
+            { month: 'Mar', google: 64, linkedin: 18, microsoft: 13 },
+            { month: 'Apr', google: 178, linkedin: 22, microsoft: 12 },
+            { month: 'May', google: 189, linkedin: 28, microsoft: 14 },
+            { month: 'Jun', google: 142, linkedin: 25, microsoft: 11 },
+            { month: 'Jul', google: 90, linkedin: 35, microsoft: 11 },
+            { month: 'Aug', google: 97, linkedin: 31, microsoft: 19 },
+            { month: 'Sep', google: 138, linkedin: 26, microsoft: 22 },
+        ];
 
-        const Chart = () => (
-            <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                    <Pie data={data} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
-                        {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                    </Pie>
-                </PieChart>
-            </ResponsiveContainer>
+        const EFFICIENCY_DATA = [
+            { name: CHANNELS.GOOGLE, cpl: 351.74, cpc: 4.90, color: CHANNEL_CONFIG[CHANNELS.GOOGLE].color },
+            { name: CHANNELS.LINKEDIN, cpl: 544.32, cpc: 43.19, color: CHANNEL_CONFIG[CHANNELS.LINKEDIN].color },
+            { name: CHANNELS.MICROSOFT, cpl: 706.11, cpc: 2.09, color: CHANNEL_CONFIG[CHANNELS.MICROSOFT].color },
+        ];
+
+        const CHANNEL_DETAILS = {
+            [CHANNELS.GOOGLE]: {
+                name: 'Google Ads',
+                key: 'google',
+                color: 'bg-blue-600',
+                lightColor: 'bg-blue-50',
+                textColor: 'text-blue-600',
+                borderColor: 'border-blue-200',
+                metrics: {
+                    spend: 517323,
+                    leads: 1565,
+                    cpl: 351.74,
+                    cpc: 4.90,
+                    ctr: '3.4%',
+                    convRate: '3.8%',
+                    pipeline: 4880000,
+                    ss0: 59
+                },
+                insight: "The primary volume driver (68% of leads). Consistent 3.4% CTR indicates strong ad relevance. Provides the scalable foundation for growth."
+            },
+            [CHANNELS.LINKEDIN]: {
+                name: 'LinkedIn Ads',
+                key: 'linkedin',
+                color: 'bg-violet-600',
+                lightColor: 'bg-violet-50',
+                textColor: 'text-violet-600',
+                borderColor: 'border-violet-200',
+                metrics: {
+                    spend: 218699,
+                    leads: 409,
+                    cpl: 544.32,
+                    cpc: 43.19,
+                    ctr: '0.45%',
+                    convRate: '4.2%',
+                    pipeline: 510000,
+                    ss0: 17
+                },
+                insight: "Critical for full-funnel engagement. Targets high-value accounts ($500k+ opps). Nurtures high-intent prospects despite lower volume."
+            },
+            [CHANNELS.MICROSOFT]: {
+                name: 'Microsoft Ads',
+                key: 'microsoft',
+                color: 'bg-teal-600',
+                lightColor: 'bg-teal-50',
+                textColor: 'text-teal-600',
+                borderColor: 'border-teal-200',
+                metrics: {
+                    spend: 119215,
+                    leads: 218,
+                    cpl: 706.11,
+                    cpc: 2.09,
+                    ctr: '2.8%',
+                    convRate: '6.8%',
+                    pipeline: 1550000,
+                    ss0: 15
+                },
+                insight: "Highest efficiency channel (13.0x POAS). Exceptionally low CPC ($2.09) and high conversion rate (6.8%) drive significant pipeline value."
+            }
+        };
+
+        const GLOBAL_METRICS = {
+            pipeline: 7070000,
+            spend: 882000,
+            leads: 2281,
+            ss0: 90,
+            cpl: 386,
+            poas: '8.0x'
+        };
+
+        const GLOBAL_CONVERSION_RATIOS = {
+            leadToMql: 176 / 2281,
+            leadToSql: 54 / 2281
+        };
+
+        // --- Helper Components ---
+        const MetricCard = ({ title, value, subtext, trend, active }) => (
+            <div className={`p-6 rounded-xl shadow-sm border flex flex-col justify-between transition-all duration-300 ${active ? 'bg-slate-50 border-blue-200 ring-1 ring-blue-100' : 'bg-white border-slate-100 hover:shadow-md'}`}> 
+                <div className="flex justify-between items-start mb-4">
+                    <div className={`p-3 rounded-lg ${active ? 'bg-blue-100 text-blue-600' : 'bg-slate-50 text-slate-600'}`}> 
+                        <i className="fas fa-chart-line text-xl"></i>
+                    </div>
+                    {trend && (
+                        <span className="text-xs font-medium px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                            {trend}
+                        </span>
+                    )}
+                </div>
+                <div>
+                    <h3 className="text-slate-500 text-sm font-medium uppercase tracking-wider">{title}</h3>
+                    <div className="text-3xl font-bold text-slate-800 mt-1">{value}</div>
+                    {subtext && <p className="text-slate-400 text-sm mt-1">{subtext}</p>}
+                </div>
+            </div> 
         );
 
-        ReactDOM.render(<Chart />, document.getElementById('dashboard'));
+        const SectionHeader = ({ title, subtitle }) => (
+            <div className="mb-6">
+                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
+                    {title}
+                </h2>
+                {subtitle && <p className="text-slate-500 text-sm ml-3 mt-1">{subtitle}</p>}
+            </div>
+        );
+
+        const FilterButton = ({ label, active, onClick, colorClass }) => (
+            <button
+                onClick={onClick}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
+                    active 
+                        ? `${colorClass} text-white border-transparent shadow-md transform scale-105` 
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`}
+            >
+                {label}
+            </button>
+        );
+
+        const ChannelCard = ({ channelKey, active, onClick }) => {
+            const data = CHANNEL_DETAILS[channelKey];
+            const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+            
+            return (
+                <div 
+                    onClick={onClick}
+                    className={`relative cursor-pointer rounded-xl border-t-4 p-6 transition-all duration-300 ${
+                        active 
+                            ? `bg-white shadow-lg -translate-y-2 border-l border-r border-b z-10 scale-105 ${data.borderColor}` 
+                            : `bg-slate-50/50 border-slate-200 border hover:bg-white hover:shadow-md hover:-translate-y-1`
+                    } ${active ? '' : 'opacity-80 hover:opacity-100'}`}
+                >
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className={`text-lg font-bold ${active ? data.textColor : 'text-slate-700'}`}>{data.name}</h3>
+                        {active && (
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${data.lightColor} ${data.textColor}`}> 
+                                Active
+                            </span>
+                        )}
+                    </div> 
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <p className="text-xs text-slate-400 uppercase">Spend</p>
+                            <p className="text-lg font-semibold text-slate-700">{formatCurrency(data.metrics.spend)}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-400 uppercase">Leads</p>
+                            <p className="text-lg font-semibold text-slate-700">{data.metrics.leads.toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-400 uppercase">Avg CPL</p>
+                            <p className="text-lg font-semibold text-slate-700">${data.metrics.cpl}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-slate-400 uppercase">Lead → SS0</p>
+                            <p className="text-lg font-semibold text-slate-700">{data.metrics.convRate}</p>
+                        </div>
+                    </div>
+
+                    <div className={`p-4 rounded-lg transition-colors ${active ? data.lightColor : 'bg-slate-100'}`}> 
+                        <p className={`text-sm italic ${active ? data.textColor : 'text-slate-500'}`}> 
+                            "{data.insight}"
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+
+        const CustomTooltip = ({ active, payload, label }) => {
+            if (active && payload && payload.length) {
+                return (
+                    <div className="bg-white p-3 border border-slate-200 shadow-lg rounded-lg z-50">
+                        <p className="font-bold text-slate-700 mb-2">{label}</p>
+                        {payload.map((entry, index) => (
+                            <div key={index} className="flex items-center gap-2 text-sm">
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
+                                <span className="text-slate-500 capitalize">{entry.name}:</span>
+                                <span className="font-medium text-slate-800">
+                                    {entry.name.includes('CPC') || entry.name.includes('CPL') || entry.value > 1000
+                                        ? `$${entry.value.toLocaleString()}` 
+                                        : entry.value}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
+            return null;
+        };
+
+        // --- Main App Component ---
+        const App = () => {
+            const [selectedChannel, setSelectedChannel] = useState(null);
+
+            const kpiData = useMemo(() => {
+                if (!selectedChannel) {
+                    return {
+                        pipeline: "$7.07M",
+                        poas: GLOBAL_METRICS.poas,
+                        leads: GLOBAL_METRICS.leads.toLocaleString(),
+                        cpl: `$${GLOBAL_METRICS.cpl}`,
+                        trend: "High Impact"
+                    };
+                }
+                const data = CHANNEL_DETAILS[selectedChannel].metrics;
+                const poas = (data.pipeline / data.spend).toFixed(1) + 'x';
+                return {
+                    pipeline: `$${(data.pipeline / 1000000).toFixed(2)}M`,
+                    poas: poas,
+                    leads: data.leads.toLocaleString(),
+                    cpl: `$${data.cpl}`,
+                    trend: "Filtered View"
+                };
+            }, [selectedChannel]);
+
+            const funnelData = useMemo(() => {
+                let leads, ss0, mql, sql, color;
+                
+                if (!selectedChannel) {
+                    leads = GLOBAL_METRICS.leads;
+                    ss0 = GLOBAL_METRICS.ss0;
+                    mql = 176;
+                    sql = 54;
+                    color = '#3B82F6';
+                } else {
+                    const metrics = CHANNEL_DETAILS[selectedChannel].metrics;
+                    leads = metrics.leads;
+                    ss0 = metrics.ss0;
+                    mql = Math.round(leads * GLOBAL_CONVERSION_RATIOS.leadToMql);
+                    sql = Math.round(leads * GLOBAL_CONVERSION_RATIOS.leadToSql);
+                    color = CHANNEL_CONFIG[selectedChannel].color;
+                }
+
+                return [
+                    { stage: 'Total Leads', count: leads, color: color, opacity: 1 },
+                    { stage: 'MQLs (Est)', count: mql, color: color, opacity: 0.8 },
+                    { stage: 'Sales Qualified (Est)', count: sql, color: color, opacity: 0.6 },
+                    { stage: 'Closed / SS0', count: ss0, color: color, opacity: 0.4 },
+                ];
+            }, [selectedChannel]);
+
+            return (
+                <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-12">
+                    
+                    {/* Header Banner */}
+                    <div className="bg-slate-900 text-white pb-32 pt-10 px-6 shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+                        <div className="absolute top-0 right-40 w-96 h-96 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+
+                        <div className="max-w-7xl mx-auto relative z-10">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                                            <i className="fas fa-layer-group text-blue-300 text-xl"></i>
+                                        </div>
+                                        <h1 className="text-3xl font-bold">Strategic Acquisition Analysis</h1>
+                                    </div>
+                                    <p className="text-slate-400 max-w-xl">Interactive dashboard: Select a channel below to isolate performance metrics across the entire funnel.</p>
+                                </div>
+                                <div className="mt-4 md:mt-0 flex gap-3">
+                                    <div className="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20 text-sm">
+                                        <span className="text-blue-300">Period:</span> YTD (Jan-Sep)
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Filter Controls */}
+                            <div className="flex flex-wrap gap-3 mt-8">
+                                <div className="flex items-center mr-2 text-slate-400 text-sm font-medium">
+                                    <i className="fas fa-filter mr-2"></i> Filter View:
+                                </div>
+                                <FilterButton 
+                                    label="All Channels" 
+                                    active={selectedChannel === null} 
+                                    onClick={() => setSelectedChannel(null)} 
+                                    colorClass="bg-slate-600"
+                                />
+                                <FilterButton 
+                                    label="Google Ads" 
+                                    active={selectedChannel === CHANNELS.GOOGLE} 
+                                    onClick={() => setSelectedChannel(CHANNELS.GOOGLE)} 
+                                    colorClass="bg-blue-600"
+                                />
+                                <FilterButton 
+                                    label="Microsoft Ads" 
+                                    active={selectedChannel === CHANNELS.MICROSOFT} 
+                                    onClick={() => setSelectedChannel(CHANNELS.MICROSOFT)} 
+                                    colorClass="bg-teal-600"
+                                />
+                                <FilterButton 
+                                    label="LinkedIn Ads" 
+                                    active={selectedChannel === CHANNELS.LINKEDIN} 
+                                    onClick={() => setSelectedChannel(CHANNELS.LINKEDIN)} 
+                                    colorClass="bg-violet-600"
+                                />
+                                {selectedChannel && (
+                                    <button 
+                                        onClick={() => setSelectedChannel(null)}
+                                        className="ml-auto text-sm text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                                    >
+                                        <i className="fas fa-sync"></i> Reset Dashboard
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content Container */}
+                    <div className="max-w-7xl mx-auto px-6 -mt-20 relative z-20">
+                        
+                        {/* KPI Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10"> 
+                            <MetricCard 
+                                title="Total Pipeline" 
+                                value={kpiData.pipeline} 
+                                subtext="Attributed Revenue"
+                                trend={kpiData.trend}
+                                active={!!selectedChannel}
+                            />
+                            <MetricCard 
+                                title="Return on Ad Spend" 
+                                value={kpiData.poas} 
+                                subtext="Pipeline / Spend"
+                                active={!!selectedChannel}
+                            />
+                            <MetricCard 
+                                title="Total Leads" 
+                                value={kpiData.leads} 
+                                subtext="Volume (YTD)"
+                                active={!!selectedChannel}
+                            />
+                            <MetricCard 
+                                title="Avg. CPL" 
+                                value={kpiData.cpl} 
+                                subtext="Cost Per Lead"
+                                active={!!selectedChannel}
+                            />
+                        </div>
+
+                        {/* Channel Details Grid */}
+                        <div className="mb-10">
+                            <SectionHeader title="Channel Deep Dive" subtitle="Select a card below to focus the dashboard" />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <ChannelCard 
+                                    channelKey={CHANNELS.GOOGLE} 
+                                    active={selectedChannel === CHANNELS.GOOGLE}
+                                    onClick={() => setSelectedChannel(selectedChannel === CHANNELS.GOOGLE ? null : CHANNELS.GOOGLE)}
+                                />
+                                <ChannelCard 
+                                    channelKey={CHANNELS.MICROSOFT} 
+                                    active={selectedChannel === CHANNELS.MICROSOFT}
+                                    onClick={() => setSelectedChannel(selectedChannel === CHANNELS.MICROSOFT ? null : CHANNELS.MICROSOFT)}
+                                />
+                                <ChannelCard 
+                                    channelKey={CHANNELS.LINKEDIN} 
+                                    active={selectedChannel === CHANNELS.LINKEDIN}
+                                    onClick={() => setSelectedChannel(selectedChannel === CHANNELS.LINKEDIN ? null : CHANNELS.LINKEDIN)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Funnel Waterfall View */}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 mb-12"> 
+                            <div className="flex justify-between items-center mb-6"> 
+                                <SectionHeader title="Funnel Velocity" subtitle={selectedChannel ? `${selectedChannel} Conversion Path` : "Aggregated Funnel Performance"} />
+                                {selectedChannel && <span className="text-xs text-slate-400 font-mono">EST. INTERPOLATION</span>} 
+                            </div> 
+
+                            <div className="flex flex-col gap-4 justify-center pb-8 transition-all duration-500"> 
+                                {funnelData.map((item, index) => (
+                                    <div key={index} className="relative group"> 
+                                        <div  
+                                            className="h-16 rounded-lg flex items-center justify-between px-6 text-white transition-all duration-500 ease-in-out relative overflow-hidden" 
+                                            style={{  
+                                                width: `${100 - (index * 15)}%`,  
+                                                backgroundColor: item.color,
+                                                marginLeft: 'auto',
+                                                marginRight: 'auto',
+                                                opacity: item.opacity
+                                            }} 
+                                        > 
+                                            <span className="font-medium flex items-center gap-2 relative z-10"> 
+                                                {index === 0 && <i className="fas fa-mouse-pointer"></i>} 
+                                                {index === 1 && <i className="fas fa-heart-pulse"></i>} 
+                                                {index === 2 && <i className="fas fa-users"></i>} 
+                                                {index === 3 && <i className="fas fa-bullseye"></i>} 
+                                                {item.stage}
+                                            </span> 
+                                            <span className="text-xl font-bold relative z-10">{item.count.toLocaleString()}</span>
+                                        </div>
+                                        
+                                        {index < funnelData.length - 1 && (
+                                            <div className="h-4 w-px bg-slate-300 mx-auto my-1"></div> 
+                                        )} 
+                                    </div>
+                                ))} 
+                                
+                                <div className="mt-6 flex justify-between items-center text-sm text-slate-500 px-8 pt-4 border-t border-slate-100"> 
+                                    <div className="text-center"> 
+                                        <p className="font-bold text-slate-700 text-lg"> 
+                                            {selectedChannel ? CHANNEL_DETAILS[selectedChannel].metrics.convRate : "3.9%"} 
+                                        </p> 
+                                        <p className="text-xs uppercase tracking-wide">Lead → SS0 Rate</p> 
+                                    </div> 
+                                    <div className="text-center"> 
+                                        <p className="font-bold text-slate-700 text-lg"> 
+                                            {selectedChannel ? CHANNEL_DETAILS[selectedChannel].metrics.ss0 : "90"} 
+                                        </p> 
+                                        <p className="text-xs uppercase tracking-wide">Opportunities</p> 
+                                    </div> 
+                                </div> 
+                            </div> 
+                        </div>
+
+                        <div className="text-center text-slate-400 text-sm border-t border-slate-200 pt-8"> 
+                            <p>© 2026 Xactly Strategic Analysis Report. Confidential.</p> 
+                        </div>
+
+                    </div>
+                </div>
+            ); 
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
 </html>
