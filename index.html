@@ -3,59 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.0/dist/tailwind.min.css" rel="stylesheet">
     <title>Strategic Acquisition Analysis Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
-        .dashboard { display: flex; justify-content: space-between; flex-wrap: wrap; }
-        .card { background: white; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); border-radius: 5px; padding: 20px; margin: 10px; flex: 1 1 calc(30% - 40px); }
-        .filters { margin-bottom: 20px; }
-        .filter { margin-right: 10px; }
-        .funnel { display: flex; justify-content: center; margin-top: 20px; }
+        /* Add any additional styling here */
     </style>
 </head>
-<body>
-    <h1>Strategic Acquisition Analysis Dashboard</h1>
-    <div class="filters">
-        <select class="filter" onchange="filterByChannel(this.value)">
-            <option value="all">All Channels</option>
-            <option value="email">Email</option>
-            <option value="social">Social Media</option>
-            <option value="seo">SEO</option>
-        </select>
-    </div>
-    <div class="dashboard">
-        <div class="card"><h2>KPI 1</h2><p>Value: <span id="kpi1">100</span></p></div>
-        <div class="card"><h2>KPI 2</h2><p>Value: <span id="kpi2">200</span></p></div>
-        <div class="card"><h2>KPI 3</h2><p>Value: <span id="kpi3">300</span></p></div>
-    </div>
-    <div class="funnel">
-        <canvas id="funnelChart" width="400" height="400"></canvas>
-    </div>
-    <script>
-        function filterByChannel(channel) {
-            // Placeholder for filter logic.
-            console.log('Filtering by channel:', channel);
-        }
+<body class="bg-gray-100">
+    <div class="container mx-auto p-5">
+        <h1 class="text-3xl font-bold mb-5">Strategic Acquisition Analysis Dashboard</h1>
+        
+        <div class="grid grid-cols-3 gap-4 mb-5">
+            <div class="bg-white rounded shadow p-5">
+                <h2 class="text-lg font-semibold">Total Visitors</h2>
+                <p id="total-visitors" class="text-3xl">0</p>
+            </div>
+            <div class="bg-white rounded shadow p-5">
+                <h2 class="text-lg font-semibold">Conversion Rate</h2>
+                <p id="conversion-rate" class="text-3xl">0%</p>
+            </div>
+            <div class="bg-white rounded shadow p-5">
+                <h2 class="text-lg font-semibold">Total Spend</h2>
+                <p id="total-spend" class="text-3xl">$0</p>
+            </div>
+        </div>
 
-        // Sample funnel chart using Chart.js (ensure Chart.js is included in your project)
-        const ctx = document.getElementById('funnelChart').getContext('2d');
-        const funnelChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Awareness', 'Interest', 'Decision', 'Action'],
-                datasets: [{
-                    label: 'Funnel',
-                    data: [300, 250, 150, 50],
-                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                }],
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true }
+        <div class="grid grid-cols-3 gap-4 mb-5">
+            <div class="bg-white rounded shadow p-5" data-channel="Google Ads">
+                <h2 class="text-lg font-semibold">Google Ads</h2>
+                <p class="mt-2" id="google-ads-metrics">Metrics: 0</p>
+            </div>
+            <div class="bg-white rounded shadow p-5" data-channel="Microsoft Ads">
+                <h2 class="text-lg font-semibold">Microsoft Ads</h2>
+                <p class="mt-2" id="microsoft-ads-metrics">Metrics: 0</p>
+            </div>
+            <div class="bg-white rounded shadow p-5" data-channel="LinkedIn Ads">
+                <h2 class="text-lg font-semibold">LinkedIn Ads</h2>
+                <p class="mt-2" id="linkedin-ads-metrics">Metrics: 0</p>
+            </div>
+        </div>
+
+        <div class="mb-5">
+            <button class="bg-blue-500 text-white px-4 py-2 rounded" onclick="filterData('all')">Show All</button>
+            <button class="bg-green-500 text-white px-4 py-2 rounded" onclick="filterData('Google Ads')">Google Ads</button>
+            <button class="bg-red-500 text-white px-4 py-2 rounded" onclick="filterData('Microsoft Ads')">Microsoft Ads</button>
+            <button class="bg-purple-500 text-white px-4 py-2 rounded" onclick="filterData('LinkedIn Ads')">LinkedIn Ads</button>
+        </div>
+
+        <canvas id="funnel-chart" width="400" height="200"></canvas>
+        
+        <script>
+            // Sample data for the dashboard
+            const data = {
+                "Google Ads": { visitors: 1200, conversions: 120, spend: 3000 },
+                "Microsoft Ads": { visitors: 800, conversions: 80, spend: 2000 },
+                "LinkedIn Ads": { visitors: 500, conversions: 50, spend: 1500 }
+            };
+
+            function updateMetrics() {
+                let totalVisitors = 0;
+                let totalConversions = 0;
+                let totalSpend = 0;
+
+                for (const channel in data) {
+                    totalVisitors += data[channel].visitors;
+                    totalConversions += data[channel].conversions;
+                    totalSpend += data[channel].spend;
+
+                    document.getElementById(`${channel.toLowerCase().replace(' ', '-')}-metrics`).innerText = `Metrics: ${data[channel].visitors}`;
+                }
+
+                document.getElementById('total-visitors').innerText = totalVisitors;
+                document.getElementById('conversion-rate').innerText = ((totalConversions / totalVisitors) * 100).toFixed(2) + '%';
+                document.getElementById('total-spend').innerText = `$${totalSpend}`;
+            }
+
+            function filterData(channel) {
+                // Basic filtering logic
+                if (channel === 'all') {
+                    for (const channel in data) {
+                        document.querySelector(`[data-channel="${channel}"]`).style.display = 'block';
+                    }
+                } else {
+                    for (const channel in data) {
+                        document.querySelector(`[data-channel="${channel}"]`).style.display = channel === channel ? 'block' : 'none';
+                    }
                 }
             }
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+            updateMetrics();
+        </script>
+    </div>
 </body>
 </html>
